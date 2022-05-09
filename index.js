@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const objectId = require('mongodb').ObjectId;
 require('dotenv').config()
 
 
@@ -13,32 +14,35 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lyrka.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-async function run(){
-try{
-    await client.connect();
-    const collection = client.db("warehouse").collection("supperCar");
-    
-    app.get('/inventory', async(req, res)=> {
-        const query = {};
-        const cursor = collection.find(query);
-        const inventories = await cursor.toArray();
-    res.send( inventories)
-    })
+async function run() {
+    try {
+        await client.connect();
+        const collection = client.db("warehouse").collection("supperCar");
 
-    app.post("/inventory", async(req, res)=>{
-        const newQuantity = req.body;
-        console.log('Restoking new cars', (newQuantity));
-        const result = await collection.insertOne(newQuantity);
-        res.send(result)
-    })
+        app.get('/inventory', async (req, res) => {
+            const query = {};
+            const cursor = collection.find(query);
+            const inventories = await cursor.toArray();
+            res.send(inventories)
+        })
 
-    app.delete('/inventory/:id', async(req, res) => {
-        const id = req.params.id;
-    })
-}
-finally{
-    // await client.close();
-}
+        app.post("/inventory", async (req, res) => {
+            const newQuantity = req.body;
+            console.log('Restoking new cars', (newQuantity));
+            const result = await collection.insertOne(newQuantity);
+            res.send(result)
+        })
+
+        app.delete('/inventory/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await collection.deleteOne(query);
+            res.send(result);
+        })
+    }
+    finally {
+        // await client.close();
+    }
 }
 
 run().catch(console.dir)

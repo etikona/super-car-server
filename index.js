@@ -17,6 +17,24 @@ async function run(){
 try{
     await client.connect();
     const collection = client.db("warehouse").collection("supperCar");
+    
+    app.get('/inventory', async(req, res)=> {
+        const query = {};
+        const cursor = collection.find(query);
+        const inventories = await cursor.toArray();
+    res.send( inventories)
+    })
+
+    app.post("/inventory", async(req, res)=>{
+        const newQuantity = req.body;
+        console.log('Restoking new cars', (newQuantity));
+        const result = await collection.insertOne(newQuantity);
+        res.send(result)
+    })
+
+    app.delete('/inventory/:id', async(req, res) => {
+        const id = req.params.id;
+    })
 }
 finally{
     // await client.close();
@@ -35,7 +53,7 @@ app.get('/', (req, res) => {
 
 
 
-app.get('/inventory', (req, res) => {
+app.get('/inventories', (req, res) => {
     res.send('Inventories');
 })
 
